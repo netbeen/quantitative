@@ -61,26 +61,24 @@ def plot_backtest_results(df, investments):
     ax1 = fig.add_subplot(gs[0])
     
     # 绘制收盘价
-    ax1.plot(df.index, df['Close'], label='收盘价', color='gray', alpha=0.6)
+    ax1.plot(df.index, df['Close'], label='Close', color='gray', alpha=0.6)
     ax1.plot(df.index, df['MA20'], label='MA20', color='orange')
-    ax1.plot(df.index, df['Cost_Basis'], label='持仓成本', color='purple')
+    ax1.plot(df.index, df['Cost_Basis'], label='Cost Basis', color='purple')
     
-    # 添加买入点标记
-    for date, price, amount in zip(buy_dates, buy_prices, buy_amounts):
+    # 添加买入点标记（只标记点，不显示金额）
+    for date, price in zip(buy_dates, buy_prices):
         ax1.scatter(date, price, marker='^', color='blue', s=100)
-        ax1.annotate(f'${amount}', (date, price), 
-                    xytext=(5, 5), textcoords='offset points')
     
-    ax1.set_title('SPY 投资策略回测结果')
+    ax1.set_title('SPY Investment Strategy Backtest')
     ax1.grid(True)
     ax1.legend()
     
     # 下方子图：投资金额
     ax2 = fig.add_subplot(gs[1], sharex=ax1)
     ax2.bar(investment_df.index, investment_df['amount'], 
-            color='blue', alpha=0.6, width=20)  # 将 width 从 1 改为 20
-    ax2.set_title('每期投资金额')
-    ax2.set_ylabel('投资金额 (USD)')
+            color='blue', alpha=0.6, width=20)
+    ax2.set_title('Monthly Investment Amount')
+    ax2.set_ylabel('Investment Amount (USD)')
     ax2.grid(True)
     
     # 格式化y轴为美元格式
@@ -143,12 +141,12 @@ def backtest_strategy():
     final_value = total_shares * df['Close'][-1]
     total_return = (final_value - total_invested) / total_invested * 100
     
-    print(f"\n=== 回测结果 ===")
-    print(f"总投资金额: ${total_invested:,.2f}")
-    print(f"最终市值: ${final_value:,.2f}")
-    print(f"总收益率: {total_return:.2f}%")
-    print(f"持有股数: {total_shares:.2f}")
-    print(f"投资次数: {len(investments)}")
+    print(f"\n=== Backtest Results ===")
+    print(f"Total Investment: ${total_invested:,.2f}")
+    print(f"Final Value: ${final_value:,.2f}")
+    print(f"Total Return: {total_return:.2f}%")
+    print(f"Shares Held: {total_shares:.2f}")
+    print(f"Number of Investments: {len(investments)}")
     
     # 在返回结果之前添加可视化
     plot_backtest_results(df, investments)
