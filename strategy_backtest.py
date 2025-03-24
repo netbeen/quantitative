@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import mplfinance as mpf
+import matplotlib.pyplot as plt  # 添加这行导入
 from data_fetcher import fetch_spy_historical_data
 from datetime import datetime, timedelta
 
@@ -13,13 +14,13 @@ def calculate_investment_amount(current_price, ma20):
     elif 0 < drop_percentage <= 5:
         return 1000
     elif 5 < drop_percentage <= 10:
-        return 1500
-    elif 10 < drop_percentage <= 15:
         return 2000
+    elif 10 < drop_percentage <= 15:
+        return 4000
     elif 15 < drop_percentage <= 20:
-        return 2500
+        return 8000
     else:  # > 20%
-        return 3000
+        return 16000
 
 def plot_backtest_results(df, investments):
     # 将投资记录转换为适合绘图的格式
@@ -46,42 +47,52 @@ def plot_backtest_results(df, investments):
     # 准备绘图数据
     df_plot = df.copy()
     
-    # 设置绘图样式
-    mc = mpf.make_marketcolors(up='red', down='green', edge='inherit',
-                              wick='inherit', volume='inherit')
-    s = mpf.make_mpf_style(marketcolors=mc, gridstyle='dotted')
+    # 准备投资金额数据
+    investment_df = pd.DataFrame(index=df.index)
+    investment_df['amount'] = 0
+    for date, amount in zip(buy_dates, buy_amounts):
+        investment_df.loc[date, 'amount'] = amount
     
-    # 添加均线和成本线
-    addplot = [
-        mpf.make_addplot(df['MA20'], color='orange', width=1, label='MA20'),
-        mpf.make_addplot(df['Cost_Basis'], color='purple', width=1, label='持仓成本')
-    ]
+    # 创建figure和子图
+    fig = plt.figure(figsize=(15, 12))
+    gs = fig.add_gridspec(2, 1, height_ratios=[2, 1], hspace=0.1)
     
-    # 绘制图表
-    fig, axes = mpf.plot(
-        df_plot,
-        type='candle',
-        style=s,
-        title='SPY 投资策略回测结果',
-        volume=True,
-        addplot=addplot,
-        returnfig=True,
-        figsize=(15, 10)
-    )
+    # 上方子图：价格走势图
+    ax1 = fig.add_subplot(gs[0])
     
-    # 手动添加买入点标记
+    # 绘制收盘价
+    ax1.plot(df.index, df['Close'], label='收盘价', color='gray', alpha=0.6)
+    ax1.plot(df.index, df['MA20'], label='MA20', color='orange')
+    ax1.plot(df.index, df['Cost_Basis'], label='持仓成本', color='purple')
+    
+    # 添加买入点标记
     for date, price, amount in zip(buy_dates, buy_prices, buy_amounts):
-        axes[0].scatter(df_plot.index.get_loc(date), price, 
-                       marker='^', color='blue', s=100)
-        axes[0].annotate(f'${amount}', 
-                        (df_plot.index.get_loc(date), price),
-                        xytext=(5, 5), textcoords='offset points')
+        ax1.scatter(date, price, marker='^', color='blue', s=100)
+        ax1.annotate(f'${amount}', (date, price), 
+                    xytext=(5, 5), textcoords='offset points')
     
-    # 添加图例
-    axes[0].legend(['MA20', '持仓成本'])
+    ax1.set_title('SPY 投资策略回测结果')
+    ax1.grid(True)
+    ax1.legend()
+    
+    # 下方子图：投资金额
+    ax2 = fig.add_subplot(gs[1], sharex=ax1)
+    ax2.bar(investment_df.index, investment_df['amount'], 
+            color='blue', alpha=0.6, width=20)  # 将 width 从 1 改为 20
+    ax2.set_title('每期投资金额')
+    ax2.set_ylabel('投资金额 (USD)')
+    ax2.grid(True)
+    
+    # 格式化y轴为美元格式
+    ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+    
+    # 调整x轴标签
+    plt.setp(ax1.get_xticklabels(), visible=False)
+    
+    # 调整布局
+    plt.tight_layout()
     
     # 保存图表
-    import matplotlib.pyplot as plt
     plt.savefig('backtest_visualization.png', bbox_inches='tight', dpi=300)
     plt.close()
 
