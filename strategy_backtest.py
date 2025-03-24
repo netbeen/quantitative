@@ -10,17 +10,17 @@ def calculate_investment_amount(current_price, ma20):
     drop_percentage = (ma20 - current_price) / ma20 * 100
     
     if drop_percentage <= 0:  # 盈利
-        return 500
-    elif 0 < drop_percentage <= 5:
         return 1000
-    elif 5 < drop_percentage <= 10:
+    elif 0 < drop_percentage <= 5:
         return 2000
-    elif 10 < drop_percentage <= 15:
+    elif 5 < drop_percentage <= 10:
         return 4000
-    elif 15 < drop_percentage <= 20:
+    elif 10 < drop_percentage <= 15:
         return 8000
-    else:  # > 20%
+    elif 15 < drop_percentage <= 20:
         return 16000
+    else:  # > 20%
+        return 32000
 
 def plot_backtest_results(df, investments):
     # 将投资记录转换为适合绘图的格式
